@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,16 +13,18 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
-            ['name' => 'Super Admin', 'password' => Hash::make('password')]
-        );
-        $user->assignRole('super_admin');
+        collect([
+            ['name' => 'Super Admin', 'email' => 'admin@admin.com', 'role' => 'super_admin'],
+            ['name' => 'Admin HR', 'email' => 'admin.hr@sdm.test', 'role' => 'admin_hr'],
+            ['name' => 'Manajer', 'email' => 'manajer@sdm.test', 'role' => 'manajer'],
+            ['name' => 'Karyawan', 'email' => 'karyawan@sdm.test', 'role' => 'karyawan'],
+        ])->each(function (array $userData): void {
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                ['name' => $userData['name'], 'password' => Hash::make('password')]
+            );
 
-        $user = User::firstOrCreate(
-            ['email' => 'user@admin.com'],
-            ['name' => 'User Account', 'password' => Hash::make('password')]
-        );
-        $user->assignRole('user');
+            $user->syncRoles([$userData['role']]);
+        });
     }
 }
