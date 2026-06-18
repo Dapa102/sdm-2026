@@ -72,6 +72,28 @@ it('stores out of range check-ins as pending verification', function () {
         ->and($log->approval_status)->toBe('PENDING');
 });
 
+it('allows check-in on the surat tugas end date', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $checkedInAt = now()->setTime(15, 0);
+    $suratTugas = activeSuratTugasFor($user, [
+        'start_date' => $checkedInAt->copy()->subDay()->toDateString(),
+        'end_date' => $checkedInAt->toDateString(),
+    ]);
+
+    $log = app(AttendanceService::class)->checkIn(
+        $user,
+        $suratTugas,
+        -6.2000000,
+        106.8166660,
+        testPhotoData(),
+        $checkedInAt,
+    );
+
+    expect($log->attendance_date->isSameDay($checkedInAt))->toBeTrue();
+});
+
 it('prevents duplicate check-ins for the same assignment and date', function () {
     Storage::fake('public');
 
@@ -111,4 +133,26 @@ it('requires seven hours before check-out', function () {
         ->and(AttendanceLog::count())->toBe(1);
 
     Storage::disk('public')->assertExists($checkedOut->check_out_photo_url);
+});
+
+it('requires check-out on the same attendance date', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $suratTugas = activeSuratTugasFor($user, [
+        'end_date' => now()->addDays(2)->toDateString(),
+    ]);
+    $service = app(AttendanceService::class);
+
+    $checkInAt = now()->setTime(16, 0);
+    $log = $service->checkIn($user, $suratTugas, -6.2000000, 106.8166660, testPhotoData(), $checkInAt);
+
+    expect(fn () => $service->checkOut(
+        $user,
+        $log,
+        -6.2000000,
+        106.8166660,
+        testPhotoData(),
+        $checkInAt->copy()->addDay()->setTime(8, 0),
+    ))->toThrow(ValidationException::class);
 });

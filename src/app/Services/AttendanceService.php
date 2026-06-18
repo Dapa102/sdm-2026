@@ -79,6 +79,12 @@ class AttendanceService
             ]);
         }
 
+        if (! $attendanceLog->attendance_date->isSameDay($checkedOutAt)) {
+            throw ValidationException::withMessages([
+                'attendance' => 'Check-out harus dilakukan pada hari yang sama dengan check-in.',
+            ]);
+        }
+
         if ($attendanceLog->check_in_at->copy()->addHours(7)->gt($checkedOutAt)) {
             throw ValidationException::withMessages([
                 'attendance' => 'Check-out hanya bisa dilakukan minimal 7 jam setelah check-in.',
@@ -124,7 +130,8 @@ class AttendanceService
             ]);
         }
 
-        if ($suratTugas->start_date->gt($date) || $suratTugas->end_date->lt($date)) {
+        if ($suratTugas->start_date->toDateString() > $date->toDateString()
+            || $suratTugas->end_date->toDateString() < $date->toDateString()) {
             throw ValidationException::withMessages([
                 'surat_tugas' => 'Surat tugas tidak aktif untuk hari ini.',
             ]);

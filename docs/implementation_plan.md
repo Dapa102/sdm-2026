@@ -156,10 +156,12 @@ Membangun MVP Sistem SDM Terintegrasi berbasis web yang mencakup:
 
 **Tujuan:** Membangun check-in/check-out harian berbasis ST, GPS, dan foto.
 
+**Status:** Selesai diimplementasikan untuk MVP.
+
 **Task:**
-- Buat Custom Page `AttendancePage` untuk Karyawan.
-- Tampilkan ST aktif hari ini.
-- Implementasi check-in:
+- [x] Buat Custom Page `AttendancePage` untuk Karyawan.
+- [x] Tampilkan ST aktif hari ini.
+- [x] Implementasi check-in:
   - Ambil GPS browser via Geolocation API.
   - Ambil foto via Camera API.
   - Hitung jarak dengan Haversine.
@@ -168,14 +170,14 @@ Membangun MVP Sistem SDM Terintegrasi berbasis web yang mencakup:
     - `OUT_OF_RANGE` jika di luar radius.
   - Simpan `AttendanceLog` status approval `PENDING`.
   - Cegah duplikasi check-in pada ST dan tanggal yang sama.
-- Implementasi check-out:
+- [x] Implementasi check-out:
   - Wajib sudah check-in hari sama.
   - Wajib minimal 7 jam setelah check-in.
   - Ambil GPS check-out.
   - Ambil foto check-out.
   - Simpan waktu, koordinat, dan foto check-out.
-- Buat riwayat absensi untuk karyawan.
-- Tambahkan pesan error untuk:
+- [x] Buat riwayat absensi untuk karyawan.
+- [x] Tambahkan pesan error untuk:
   - Tidak ada ST aktif.
   - GPS ditolak.
   - Kamera ditolak.
