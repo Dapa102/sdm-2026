@@ -35,11 +35,17 @@ class TopEmployeesByPointsWidget extends BaseWidget
             ->sortByDesc('current_balance')
             ->take(5);
 
+        $orderedIds = $employees->pluck('id')->toArray();
+
         return $table
             ->query(
                 User::query()
-                    ->whereIn('id', $employees->pluck('id'))
+                    ->whereIn('id', $orderedIds)
                     ->whereHas('roles', fn (Builder $q) => $q->where('name', 'karyawan'))
+                    ->when(! empty($orderedIds), function ($query) use ($orderedIds) {
+                        $idsString = implode(',', array_map(fn ($id) => "'{$id}'", $orderedIds));
+                        $query->orderByRaw("FIELD(id, {$idsString})");
+                    })
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -59,10 +65,8 @@ class TopEmployeesByPointsWidget extends BaseWidget
                     ->numeric()
                     ->suffix(' pt')
                     ->color('success')
-                    ->sortable()
                     ->alignEnd(),
             ])
-            ->defaultSort('current_balance', 'desc')
             ->paginated(false);
     }
 

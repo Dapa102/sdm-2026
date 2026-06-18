@@ -41,7 +41,11 @@ return [
         'color' => 'warning',
         'logger' => \Z3d0X\FilamentLogger\Loggers\ModelLogger::class,
         'register' => [
-            // App\Models\User::class,
+            \App\Models\SuratTugas::class,
+            \App\Models\AttendanceLog::class,
+            \App\Models\MeritTransaction::class,
+            \App\Models\RewardRequest::class,
+            \App\Models\TrainingEnrollment::class,
         ],
     ],
 

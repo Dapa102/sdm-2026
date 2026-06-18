@@ -154,6 +154,15 @@ class AttendanceService
             ]);
         }
 
+        $sizeInBytes = strlen($binary);
+        $maxSizeInBytes = 5 * 1024 * 1024;
+
+        if ($sizeInBytes > $maxSizeInBytes) {
+            throw ValidationException::withMessages([
+                'photo' => 'Ukuran foto terlalu besar. Maksimal 5MB.',
+            ]);
+        }
+
         $extension = $matches['extension'] === 'jpeg' ? 'jpg' : $matches['extension'];
         $path = sprintf('attendance/%s/%s/%s.%s', now()->format('Y/m'), $type, Str::uuid(), $extension);
 
