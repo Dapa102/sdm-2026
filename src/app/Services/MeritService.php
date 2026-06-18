@@ -120,7 +120,7 @@ class MeritService
 
     public function processRewardApproval($rewardRequest): ?MeritTransaction
     {
-        if ($rewardRequest->approval_status !== 'APPROVED') {
+        if ($rewardRequest->status !== 'APPROVED') {
             return null;
         }
 
@@ -135,7 +135,7 @@ class MeritService
 
         return $this->deductPoints(
             user: $rewardRequest->user,
-            points: $rewardRequest->rewardCatalog->points_required,
+            points: $rewardRequest->rewardCatalog->point_cost,
             source: 'reward_redemption',
             reference: $rewardRequest,
             description: 'Penukaran reward: ' . $rewardRequest->rewardCatalog->name

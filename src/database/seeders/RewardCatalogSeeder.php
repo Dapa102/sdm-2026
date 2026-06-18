@@ -9,15 +9,46 @@ class RewardCatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        collect([
-            ['name' => 'Voucher Belanja', 'point_cost' => 50],
-            ['name' => 'Bonus Tunai', 'point_cost' => 100],
-            ['name' => 'Cuti Tambahan 1 Hari', 'point_cost' => 75],
-            ['name' => 'Merchandise', 'point_cost' => 25],
-            ['name' => 'Training Premium', 'point_cost' => 200],
-        ])->each(fn (array $reward) => RewardCatalog::updateOrCreate(
-            ['name' => $reward['name']],
-            ['point_cost' => $reward['point_cost'], 'is_active' => true]
-        ));
+        $rewards = [
+            [
+                'name' => 'Voucher Belanja',
+                'description' => 'Voucher belanja senilai Rp 500.000 yang dapat digunakan di berbagai merchant.',
+                'point_cost' => 50,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Bonus Tunai',
+                'description' => 'Bonus tunai Rp 1.000.000 yang akan ditransfer langsung ke rekening.',
+                'point_cost' => 100,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Cuti Tambahan 1 Hari',
+                'description' => 'Cuti tambahan 1 hari yang dapat digunakan diluar jatah cuti tahunan.',
+                'point_cost' => 75,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Merchandise',
+                'description' => 'Merchandise eksklusif perusahaan (tas, tumbler, jaket, dll).',
+                'point_cost' => 25,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Training Premium',
+                'description' => 'Akses training premium eksternal dengan sertifikat nasional/internasional.',
+                'point_cost' => 200,
+                'is_active' => true,
+            ],
+        ];
+
+        foreach ($rewards as $reward) {
+            RewardCatalog::firstOrCreate(
+                ['name' => $reward['name']],
+                $reward
+            );
+        }
+
+        $this->command->info('✓ Reward catalog seeded successfully.');
     }
 }
