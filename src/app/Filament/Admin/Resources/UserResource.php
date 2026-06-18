@@ -68,6 +68,12 @@ class UserResource extends Resource
                             ->prefixIcon('heroicon-m-envelope')
                             ->columnSpan('full')
                             ->email(),
+                        Forms\Components\Select::make('manager_id')
+                            ->label('Manajer')
+                            ->relationship('manager', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->columnSpan('full'),
 
                         Forms\Components\TextInput::make('password')
                             ->password()
@@ -110,6 +116,10 @@ class UserResource extends Resource
                     ->label('Avatar')
                     ->circular(),
                 Tables\Columns\TextColumn::make('email')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('manager.name')
+                    ->label('Manajer')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')

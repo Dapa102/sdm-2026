@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('merit_transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->restrictOnDelete();
             $table->integer('points');
             $table->string('type');
             $table->string('source');

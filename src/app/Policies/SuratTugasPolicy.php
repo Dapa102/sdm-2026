@@ -33,6 +33,10 @@ class SuratTugasPolicy
 
     public function update(User $user, SuratTugas $suratTugas): bool
     {
+        if ($suratTugas->attendanceLogs()->exists()) {
+            return false;
+        }
+
         return $this->hasPermission($user, 'update_' . self::RESOURCE)
             && ($this->isHr($user)
                 || ($this->isManager($user) && $this->managesUser($user, $suratTugas->user_id)));

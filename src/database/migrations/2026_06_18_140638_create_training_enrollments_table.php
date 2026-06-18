@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('training_enrollments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('training_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->restrictOnDelete();
+            $table->foreignUuid('training_id')->constrained()->restrictOnDelete();
             $table->string('status')->default('ENROLLED');
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

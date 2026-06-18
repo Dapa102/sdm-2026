@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('reward_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('reward_catalog_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->restrictOnDelete();
+            $table->foreignUuid('reward_catalog_id')->constrained()->restrictOnDelete();
             $table->text('reason');
             $table->string('status')->default('PENDING');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();

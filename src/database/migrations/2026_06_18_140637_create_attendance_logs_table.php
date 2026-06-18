@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('attendance_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('surat_tugas_id')->constrained('surat_tugas')->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('surat_tugas_id')->constrained('surat_tugas')->restrictOnDelete();
+            $table->foreignUuid('user_id')->constrained()->restrictOnDelete();
             $table->date('attendance_date');
             $table->timestamp('check_in_at')->nullable();
             $table->decimal('check_in_lat', 10, 7)->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('check_out_photo_url')->nullable();
             $table->string('location_status')->default('VALID');
             $table->string('approval_status')->default('PENDING');
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
 

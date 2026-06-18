@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('surat_tugas', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->restrictOnDelete();
+            $table->foreignUuid('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->date('start_date');
             $table->date('end_date');
             $table->string('location_name');
