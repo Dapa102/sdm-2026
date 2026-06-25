@@ -2,54 +2,107 @@
 
 namespace App\Policies;
 
-use App\Models\TrainingEnrollment;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSdmAuthorization;
+use App\Models\TrainingEnrollment;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TrainingEnrollmentPolicy
 {
-    use HandlesSdmAuthorization;
+    use HandlesAuthorization;
 
-    private const RESOURCE = 'training::enrollment';
-
+    /**
+     * Determine whether the user can view any models.
+     */
     public function viewAny(User $user): bool
     {
-        return $this->hasPermission($user, 'view_any_' . self::RESOURCE);
+        return $user->can('view_any_training::enrollment');
     }
 
+    /**
+     * Determine whether the user can view the model.
+     */
     public function view(User $user, TrainingEnrollment $trainingEnrollment): bool
     {
-        return $this->hasPermission($user, 'view_' . self::RESOURCE)
-            && ($this->isHr($user)
-            || $this->owns($user, $trainingEnrollment->user_id)
-            || $this->managesUser($user, $trainingEnrollment->user_id));
+        return $user->can('view_training::enrollment');
     }
 
+    /**
+     * Determine whether the user can create models.
+     */
     public function create(User $user): bool
     {
-        return $this->hasPermission($user, 'create_' . self::RESOURCE)
-            && ($this->isEmployee($user) || $this->isManager($user));
+        return $user->can('create_training::enrollment');
     }
 
+    /**
+     * Determine whether the user can update the model.
+     */
     public function update(User $user, TrainingEnrollment $trainingEnrollment): bool
     {
-        return $this->hasPermission($user, 'update_' . self::RESOURCE) && $this->isHr($user);
+        return $user->can('update_training::enrollment');
     }
 
-    public function complete(User $user, TrainingEnrollment $trainingEnrollment): bool
-    {
-        return $this->hasPermission($user, 'complete_' . self::RESOURCE) && $this->isHr($user);
-    }
-
+    /**
+     * Determine whether the user can delete the model.
+     */
     public function delete(User $user, TrainingEnrollment $trainingEnrollment): bool
     {
-        return $this->hasPermission($user, 'delete_' . self::RESOURCE)
-            && ($this->isHr($user)
-            || ($this->owns($user, $trainingEnrollment->user_id) && $trainingEnrollment->status === 'ENROLLED'));
+        return $user->can('delete_training::enrollment');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return $this->hasPermission($user, 'delete_any_' . self::RESOURCE) && $this->isHr($user);
+        return $user->can('delete_any_training::enrollment');
+    }
+
+    /**
+     * Determine whether the user can permanently delete.
+     */
+    public function forceDelete(User $user, TrainingEnrollment $trainingEnrollment): bool
+    {
+        return $user->can('{{ ForceDelete }}');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('{{ ForceDeleteAny }}');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, TrainingEnrollment $trainingEnrollment): bool
+    {
+        return $user->can('{{ Restore }}');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('{{ RestoreAny }}');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, TrainingEnrollment $trainingEnrollment): bool
+    {
+        return $user->can('{{ Replicate }}');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('{{ Reorder }}');
     }
 }

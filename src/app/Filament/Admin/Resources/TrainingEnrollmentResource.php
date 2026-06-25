@@ -30,6 +30,11 @@ class TrainingEnrollmentResource extends Resource
 
     protected static ?int $navigationSort = 70;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()

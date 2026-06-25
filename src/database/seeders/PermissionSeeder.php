@@ -59,6 +59,9 @@ class PermissionSeeder extends Seeder
         Role::findByName('admin_hr')->syncPermissions($this->adminHrPermissions());
         Role::findByName('manajer')->syncPermissions($this->managerPermissions());
         Role::findByName('karyawan')->syncPermissions($this->employeePermissions());
+        Role::findByName('supervisor')->syncPermissions($this->managerPermissions());
+        Role::findByName('employee')->syncPermissions($this->employeePermissions());
+        Role::findByName('management')->syncPermissions($this->managementPermissions());
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
@@ -154,6 +157,19 @@ class PermissionSeeder extends Seeder
             'view_any_training::enrollment',
             'create_training::enrollment',
             'delete_training::enrollment',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function managementPermissions(): array
+    {
+        return [
+            'view_surat::tugas',
+            'view_any_surat::tugas',
+            'view_attendance::log',
+            'view_any_attendance::log',
         ];
     }
 

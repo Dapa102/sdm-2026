@@ -35,6 +35,8 @@ class AttendancePage extends Page
             'admin_hr',
             'manajer',
             'karyawan',
+            'supervisor',
+            'employee',
         ]) ?? false;
     }
 
@@ -80,7 +82,7 @@ class AttendancePage extends Page
         ];
     }
 
-    public function performCheckIn(string $suratTugasId, float $latitude, float $longitude, string $photoData): void
+    public function performCheckIn(string $suratTugasId, ?float $latitude, ?float $longitude, string $photoData, ?string $notes = null): void
     {
         try {
             app(AttendanceService::class)->checkIn(
@@ -89,6 +91,7 @@ class AttendancePage extends Page
                 $latitude,
                 $longitude,
                 $photoData,
+                notes: $notes,
             );
 
             Notification::make()
@@ -106,7 +109,7 @@ class AttendancePage extends Page
         }
     }
 
-    public function performCheckOut(string $attendanceLogId, float $latitude, float $longitude, string $photoData): void
+    public function performCheckOut(string $attendanceLogId, ?float $latitude, ?float $longitude, string $photoData, ?string $notes = null): void
     {
         try {
             app(AttendanceService::class)->checkOut(
@@ -115,6 +118,7 @@ class AttendancePage extends Page
                 $latitude,
                 $longitude,
                 $photoData,
+                notes: $notes,
             );
 
             Notification::make()

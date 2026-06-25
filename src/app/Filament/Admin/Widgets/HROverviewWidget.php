@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Models\MeritTransaction;
+use App\Models\AttendanceLog;
 use App\Models\SuratTugas;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -27,11 +27,12 @@ class HROverviewWidget extends BaseWidget
             ->whereDate('end_date', '>=', now()->toDateString())
             ->count();
 
-        $totalPointsUsed = abs(MeritTransaction::where('type', 'DEBIT')->sum('points'));
-
-        $totalPointsEarned = MeritTransaction::where('type', 'CREDIT')
-            ->where('is_expired', false)
-            ->sum('points');
+        $todayAttendance = AttendanceLog::whereDate('attendance_date', now()->toDateString());
+        $presentToday = (clone $todayAttendance)->where('attendance_status', 'hadir')->count();
+        $lateToday = (clone $todayAttendance)->where('attendance_status', 'terlambat')->count();
+        $needsVerification = (clone $todayAttendance)
+            ->whereIn('verification_status', ['perlu_verifikasi', 'di_luar_lokasi'])
+            ->count();
 
         return [
             Stat::make('Total Karyawan', $totalEmployees)
@@ -50,15 +51,17 @@ class HROverviewWidget extends BaseWidget
                     ],
                 ])),
 
-            Stat::make('Point Ditukar', number_format($totalPointsUsed) . ' pt')
-                ->description('Total point yang telah ditukar')
-                ->descriptionIcon('heroicon-m-arrow-trending-down')
-                ->color('warning'),
+            Stat::make('Hadir Hari Ini', $presentToday)
+                ->description("{$lateToday} terlambat")
+                ->descriptionIcon('heroicon-m-check-circle')
+                ->color('success')
+                ->url(route('filament.admin.resources.attendance-logs.index')),
 
-            Stat::make('Point Beredar', number_format($totalPointsEarned) . ' pt')
-                ->description('Total point aktif karyawan')
-                ->descriptionIcon('heroicon-m-currency-dollar')
-                ->color('success'),
+            Stat::make('Perlu Verifikasi', $needsVerification)
+                ->description('GPS gagal atau luar radius')
+                ->descriptionIcon('heroicon-m-map-pin')
+                ->color($needsVerification > 0 ? 'warning' : 'gray')
+                ->url(route('filament.admin.resources.attendance-logs.index')),
         ];
     }
 

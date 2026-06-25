@@ -3,6 +3,9 @@
         $activeSuratTugas = $this->getActiveSuratTugas();
         $recentAttendanceLogs = $this->getRecentAttendanceLogs();
         $todayStats = $this->getTodayStats();
+        $googleMapsUrl = fn ($latitude, $longitude): ?string => is_numeric($latitude) && is_numeric($longitude)
+            ? sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude)
+            : null;
     @endphp
 
     <div
@@ -50,12 +53,28 @@
                 </div>
             </div>
 
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-200" for="attendance-notes">
+                    Catatan kendala
+                </label>
+                <textarea
+                    id="attendance-notes"
+                    x-model="notes"
+                    rows="2"
+                    maxlength="500"
+                    class="mt-2 block w-full rounded-lg border-gray-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                    placeholder="Opsional, misalnya GPS lemah atau lokasi ramai."
+                ></textarea>
+            </div>
+
             @forelse ($activeSuratTugas as $suratTugas)
                 @php
                     $todayLog = $suratTugas->attendanceLogs->first();
+                    $targetMapUrl = $googleMapsUrl($suratTugas->target_lat, $suratTugas->target_lng);
                     $locationStatusLabel = match ($todayLog?->location_status) {
                         'VALID' => 'Dalam radius',
                         'OUT_OF_RANGE' => 'Di luar radius',
+                        'UNKNOWN' => 'GPS gagal',
                         default => 'Belum absen',
                     };
                     $approvalStatusLabel = match ($todayLog?->approval_status) {
@@ -88,6 +107,7 @@
                                         'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' => ! $todayLog,
                                         'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-300' => $todayLog?->location_status === 'VALID',
                                         'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-300' => $todayLog?->location_status === 'OUT_OF_RANGE',
+                                        'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-300' => $todayLog?->location_status === 'UNKNOWN',
                                     ])>
                                         {{ $locationStatusLabel }}
                                     </span>
@@ -114,6 +134,16 @@
                                     <dd class="mt-1 text-gray-950 dark:text-white">
                                         {{ number_format((float) $suratTugas->target_lat, 5) }},
                                         {{ number_format((float) $suratTugas->target_lng, 5) }}
+                                        @if ($targetMapUrl)
+                                            <a
+                                                href="{{ $targetMapUrl }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="mt-1 block font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                                            >
+                                                Buka Maps
+                                            </a>
+                                        @endif
                                     </dd>
                                 </div>
                                 <div class="rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800/70">
@@ -177,9 +207,12 @@
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
                 @forelse ($recentAttendanceLogs as $log)
                     @php
+                        $checkInMapUrl = $googleMapsUrl($log->check_in_lat, $log->check_in_lng);
+                        $checkOutMapUrl = $googleMapsUrl($log->check_out_lat, $log->check_out_lng);
                         $historyLocationStatusLabel = match ($log->location_status) {
                             'VALID' => 'Dalam radius',
                             'OUT_OF_RANGE' => 'Di luar radius',
+                            'UNKNOWN' => 'GPS gagal',
                             default => $log->location_status,
                         };
                         $historyApprovalStatusLabel = match ($log->approval_status) {
@@ -204,6 +237,7 @@
                                 'rounded-md px-2 py-1 text-xs font-medium',
                                 'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-300' => $log->location_status === 'VALID',
                                 'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-300' => $log->location_status === 'OUT_OF_RANGE',
+                                'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-300' => $log->location_status === 'UNKNOWN',
                             ])>
                                 {{ $historyLocationStatusLabel }}
                             </span>
@@ -227,6 +261,17 @@
                                 </a>
                             @endif
 
+                            @if ($checkInMapUrl)
+                                <a
+                                    href="{{ $checkInMapUrl }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                                >
+                                    Maps masuk
+                                </a>
+                            @endif
+
                             @if ($log->check_out_photo_url)
                                 <a
                                     href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($log->check_out_photo_url) }}"
@@ -234,6 +279,17 @@
                                     class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
                                 >
                                     Foto keluar
+                                </a>
+                            @endif
+
+                            @if ($checkOutMapUrl)
+                                <a
+                                    href="{{ $checkOutMapUrl }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+                                >
+                                    Maps keluar
                                 </a>
                             @endif
                         </div>
@@ -256,6 +312,7 @@
                 busy: false,
                 message: '',
                 statusMessage: '',
+                notes: '',
 
                 async submit(type, id) {
                     this.busy = true
@@ -263,7 +320,18 @@
                     this.statusMessage = 'Mengambil lokasi GPS...'
 
                     try {
-                        const position = await this.getPosition()
+                        let latitude = null
+                        let longitude = null
+
+                        try {
+                            const position = await this.getPosition()
+                            latitude = position.coords.latitude
+                            longitude = position.coords.longitude
+                            this.statusMessage = `GPS terbaca: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+                        } catch (error) {
+                            this.statusMessage = 'GPS tidak tersedia, absensi akan dikirim untuk verifikasi manual...'
+                        }
+
                         this.statusMessage = 'Mengambil foto...'
                         const photo = await this.capturePhoto()
 
@@ -272,16 +340,18 @@
                         if (type === 'check-in') {
                             await this.$wire.performCheckIn(
                                 id,
-                                position.coords.latitude,
-                                position.coords.longitude,
+                                latitude,
+                                longitude,
                                 photo,
+                                this.notes,
                             )
                         } else {
                             await this.$wire.performCheckOut(
                                 id,
-                                position.coords.latitude,
-                                position.coords.longitude,
+                                latitude,
+                                longitude,
                                 photo,
+                                this.notes,
                             )
                         }
                     } catch (error) {

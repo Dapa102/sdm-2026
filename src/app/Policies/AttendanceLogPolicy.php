@@ -2,60 +2,107 @@
 
 namespace App\Policies;
 
-use App\Models\AttendanceLog;
 use App\Models\User;
-use App\Policies\Concerns\HandlesSdmAuthorization;
+use App\Models\AttendanceLog;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AttendanceLogPolicy
 {
-    use HandlesSdmAuthorization;
+    use HandlesAuthorization;
 
-    private const RESOURCE = 'attendance::log';
-
+    /**
+     * Determine whether the user can view any models.
+     */
     public function viewAny(User $user): bool
     {
-        return $this->hasPermission($user, 'view_any_' . self::RESOURCE);
+        return $user->can('view_any_attendance::log');
     }
 
+    /**
+     * Determine whether the user can view the model.
+     */
     public function view(User $user, AttendanceLog $attendanceLog): bool
     {
-        return $this->hasPermission($user, 'view_' . self::RESOURCE)
-            && ($this->isHr($user)
-            || $this->owns($user, $attendanceLog->user_id)
-            || $this->managesUser($user, $attendanceLog->user_id));
+        return $user->can('view_attendance::log');
     }
 
+    /**
+     * Determine whether the user can create models.
+     */
     public function create(User $user): bool
     {
-        return $this->hasPermission($user, 'create_' . self::RESOURCE) && $this->isEmployee($user);
+        return $user->can('create_attendance::log');
     }
 
+    /**
+     * Determine whether the user can update the model.
+     */
     public function update(User $user, AttendanceLog $attendanceLog): bool
     {
-        return $this->hasPermission($user, 'update_' . self::RESOURCE)
-            && ($this->owns($user, $attendanceLog->user_id)
-            || $this->isHr($user)
-            || $this->managesUser($user, $attendanceLog->user_id));
+        return $user->can('update_attendance::log');
     }
 
-    public function approve(User $user, AttendanceLog $attendanceLog): bool
-    {
-        return $this->hasPermission($user, 'approve_' . self::RESOURCE)
-            && ($this->isHr($user) || $this->managesUser($user, $attendanceLog->user_id));
-    }
-
-    public function reject(User $user, AttendanceLog $attendanceLog): bool
-    {
-        return $this->approve($user, $attendanceLog);
-    }
-
+    /**
+     * Determine whether the user can delete the model.
+     */
     public function delete(User $user, AttendanceLog $attendanceLog): bool
     {
-        return $this->hasPermission($user, 'delete_' . self::RESOURCE) && $this->isHr($user);
+        return $user->can('delete_attendance::log');
     }
 
+    /**
+     * Determine whether the user can bulk delete.
+     */
     public function deleteAny(User $user): bool
     {
-        return $this->hasPermission($user, 'delete_any_' . self::RESOURCE) && $this->isHr($user);
+        return $user->can('delete_any_attendance::log');
+    }
+
+    /**
+     * Determine whether the user can permanently delete.
+     */
+    public function forceDelete(User $user, AttendanceLog $attendanceLog): bool
+    {
+        return $user->can('{{ ForceDelete }}');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('{{ ForceDeleteAny }}');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, AttendanceLog $attendanceLog): bool
+    {
+        return $user->can('{{ Restore }}');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('{{ RestoreAny }}');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, AttendanceLog $attendanceLog): bool
+    {
+        return $user->can('{{ Replicate }}');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('{{ Reorder }}');
     }
 }

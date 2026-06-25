@@ -100,8 +100,6 @@ class AvailableTrainingsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        $user = auth()->user();
-
-        return $user && $user->hasRole('karyawan');
+        return false;
     }
 }

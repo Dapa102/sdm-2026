@@ -17,6 +17,9 @@ class RoleSeeder extends Seeder
             'admin_hr',
             'manajer',
             'karyawan',
+            'supervisor',
+            'employee',
+            'management',
         ])->each(fn (string $role) => Role::firstOrCreate(['name' => $role]));
     }
 }

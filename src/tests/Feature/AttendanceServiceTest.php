@@ -48,6 +48,9 @@ it('stores a valid check-in inside the assignment radius', function () {
 
     expect($log->location_status)->toBe('VALID')
         ->and($log->approval_status)->toBe('PENDING')
+        ->and($log->attendance_status)->toBe('hadir')
+        ->and($log->verification_status)->toBe('valid')
+        ->and($log->check_in_distance_meters)->toBe(0)
         ->and($log->check_in_photo_url)->not->toBeNull();
 
     Storage::disk('public')->assertExists($log->check_in_photo_url);
@@ -69,7 +72,30 @@ it('stores out of range check-ins as pending verification', function () {
     );
 
     expect($log->location_status)->toBe('OUT_OF_RANGE')
+        ->and($log->verification_status)->toBe('di_luar_lokasi')
         ->and($log->approval_status)->toBe('PENDING');
+});
+
+it('stores check-ins without GPS as pending verification', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $suratTugas = activeSuratTugasFor($user);
+
+    $log = app(AttendanceService::class)->checkIn(
+        $user,
+        $suratTugas,
+        null,
+        null,
+        testPhotoData(),
+        now(),
+        'GPS tidak tersedia',
+    );
+
+    expect($log->location_status)->toBe('UNKNOWN')
+        ->and($log->verification_status)->toBe('perlu_verifikasi')
+        ->and($log->notes)->toBe('GPS tidak tersedia')
+        ->and($log->check_in_distance_meters)->toBeNull();
 });
 
 it('allows check-in on the surat tugas end date', function () {
@@ -107,7 +133,7 @@ it('prevents duplicate check-ins for the same assignment and date', function () 
         ->toThrow(ValidationException::class);
 });
 
-it('requires seven hours before check-out', function () {
+it('allows check-out before seven hours because schedule rules own duration', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
@@ -117,22 +143,44 @@ it('requires seven hours before check-out', function () {
     $checkInAt = now()->setTime(8, 0);
     $log = $service->checkIn($user, $suratTugas, -6.2000000, 106.8166660, testPhotoData(), $checkInAt);
 
-    expect(fn () => $service->checkOut($user, $log, -6.2000000, 106.8166660, testPhotoData(), $checkInAt->copy()->addHours(6)))
-        ->toThrow(ValidationException::class);
-
     $checkedOut = $service->checkOut(
         $user,
         $log,
         -6.2000000,
         106.8166660,
         testPhotoData(),
-        $checkInAt->copy()->addHours(7),
+        $checkInAt->copy()->addHours(6),
     );
 
     expect($checkedOut->check_out_at)->not->toBeNull()
+        ->and($checkedOut->check_out_distance_meters)->toBe(0)
         ->and(AttendanceLog::count())->toBe(1);
 
     Storage::disk('public')->assertExists($checkedOut->check_out_photo_url);
+});
+
+it('marks checkout outside radius as needing location verification', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $suratTugas = activeSuratTugasFor($user);
+    $service = app(AttendanceService::class);
+
+    $checkInAt = now()->setTime(8, 0);
+    $log = $service->checkIn($user, $suratTugas, -6.2000000, 106.8166660, testPhotoData(), $checkInAt);
+
+    $checkedOut = $service->checkOut(
+        $user,
+        $log,
+        -6.3000000,
+        106.9000000,
+        testPhotoData(),
+        $checkInAt->copy()->addHours(6),
+    );
+
+    expect($checkedOut->location_status)->toBe('OUT_OF_RANGE')
+        ->and($checkedOut->verification_status)->toBe('di_luar_lokasi')
+        ->and($checkedOut->check_out_distance_meters)->toBeGreaterThan(0);
 });
 
 it('requires check-out on the same attendance date', function () {

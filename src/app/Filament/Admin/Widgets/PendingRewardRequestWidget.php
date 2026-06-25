@@ -43,8 +43,6 @@ class PendingRewardRequestWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        $user = auth()->user();
-
-        return $user && $user->hasAnyRole(['super_admin', 'admin_hr', 'manajer']);
+        return false;
     }
 }

@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             UserSeeder::class,
             SuratTugasSeeder::class,
+            PrdV4DemoSeeder::class,
+            PrdV4NoAttendanceSeeder::class,
             RewardCatalogSeeder::class,
         ]);
     }
